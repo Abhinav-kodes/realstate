@@ -25,20 +25,32 @@ results, X_train, X_test, y_train, y_test, best_name = train_all_models(
     _cols,                          # column names
 )
 names  = list(results.keys())
-rmses  = [results[n]["rmse"]  for n in names]
-maes   = [results[n]["mae"]   for n in names]
-r2s    = [results[n]["r2"]    for n in names]
+rmses  = [results[n]["rmse"] for n in names]
+maes   = [results[n]["mae"]  for n in names]
+r2s    = [results[n]["r2"]   for n in names]
 cv_r2s = [results[n]["cv_r2"] for n in names]
+
+# ── Guard: replace None with 0.0 for plotting only ───────────────────────────
+cv_r2s_plot = [v if v is not None else 0.0 for v in cv_r2s]
+show_cv     = any(v is not None for v in cv_r2s)   # False on cloud
+
 colors = ["#4f98a3" if n == best_name else "#555555" for n in names]
 
 # ── Bar charts ────────────────────────────────────────────────────────────────
 st.subheader("Metric Comparison")
-fig = make_subplots(rows=1, cols=4,
-                    subplot_titles=["RMSE ↓", "MAE ↓", "R² ↑", "CV R² ↑"])
-for col_idx, vals in enumerate([rmses, maes, r2s, cv_r2s], 1):
+
+metrics     = ["RMSE ↓", "MAE ↓", "R² ↑"]
+metric_vals = [rmses,     maes,    r2s   ]
+if show_cv:
+    metrics.append("CV R² ↑")
+    metric_vals.append(cv_r2s_plot)
+
+fig = make_subplots(rows=1, cols=len(metrics), subplot_titles=metrics)
+for col_idx, vals in enumerate(metric_vals, 1):
     fig.add_trace(go.Bar(
         x=names, y=vals, marker_color=colors,
-        text=[f"{v:.3f}" for v in vals], textposition="outside",
+        text=[f"{v:.3f}" for v in vals],   # ✅ vals are floats now, never None
+        textposition="outside",
         showlegend=False,
     ), row=1, col=col_idx)
 fig.update_layout(template="plotly_dark", height=420, margin=dict(t=50, b=20))
@@ -54,17 +66,26 @@ def normalise(vals, higher_is_better=True):
     norm = [(v - mn) / (mx - mn) for v in vals]
     return norm if higher_is_better else [1 - n for n in norm]
 
-cats = ["RMSE (↓)", "MAE (↓)", "R²  (↑)", "CV R² (↑)"]
-radar_vals = list(zip(
-    normalise(rmses,  higher_is_better=False),
-    normalise(maes,   higher_is_better=False),
-    normalise(r2s,    higher_is_better=True),
-    normalise(cv_r2s, higher_is_better=True),
-))
+# ✅ Only include CV R² axis if data exists
+if show_cv:
+    cats = ["RMSE (↓)", "MAE (↓)", "R² (↑)", "CV R² (↑)"]
+    radar_matrix = list(zip(
+        normalise(rmses,       higher_is_better=False),
+        normalise(maes,        higher_is_better=False),
+        normalise(r2s,         higher_is_better=True),
+        normalise(cv_r2s_plot, higher_is_better=True),
+    ))
+else:
+    cats = ["RMSE (↓)", "MAE (↓)", "R² (↑)"]
+    radar_matrix = list(zip(
+        normalise(rmses, higher_is_better=False),
+        normalise(maes,  higher_is_better=False),
+        normalise(r2s,   higher_is_better=True),
+    ))
 
 fig2 = go.Figure()
 pal  = ["#4f98a3", "#dd6974", "#e8af34", "#6daa45"]
-for i, (name, vals) in enumerate(zip(names, radar_vals)):
+for i, (name, vals) in enumerate(zip(names, radar_matrix)):
     v = list(vals) + [vals[0]]
     c = cats + [cats[0]]
     fig2.add_trace(go.Scatterpolar(
@@ -80,7 +101,7 @@ fig2.update_layout(
 )
 st.plotly_chart(fig2, width="stretch")
 
-# ── Residual distribution comparison ─────────────────────────────────────────
+# ── Residual distribution ─────────────────────────────────────────────────────
 st.subheader("Residual Distribution — All Models")
 fig3 = go.Figure()
 for i, name in enumerate(names):
@@ -102,12 +123,12 @@ rows = []
 for name in names:
     r = results[name]
     rows.append({
-        "Model":   name,
-        "RMSE":    r["rmse"],
-        "MAE":     r["mae"],
-        "R²":      r["r2"],
-        "CV R²":   r["cv_r2"],
-        "Best":    "🏆" if name == best_name else "",
+        "Model":  name,
+        "RMSE":   r["rmse"],
+        "MAE":    r["mae"],
+        "R²":     r["r2"],
+        "CV R²":  r["cv_r2"] if r["cv_r2"] is not None else "—",
+        "Best":   "🏆" if name == best_name else "",
     })
 st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 st.success(f"**Best overall model:** {best_name} — lowest RMSE = {results[best_name]['rmse']}")

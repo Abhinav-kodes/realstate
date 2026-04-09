@@ -18,6 +18,9 @@ df_clean, _ = clean_data(df_raw)
 df_feat = engineer_features(df_clean)
 cr      = run_clustering(df_feat)
 df, price_map = add_cluster_cols(df_feat, cr)
+if not isinstance(price_map, dict):
+    price_map = dict(enumerate(price_map)) if isinstance(price_map, np.ndarray) \
+                else price_map.to_dict()
 _cols = FEATURE_COLS + ["price_per_area"]
 results, X_train, X_test, y_train, y_test, best_name = train_all_models(
     len(df),                        # hashable key

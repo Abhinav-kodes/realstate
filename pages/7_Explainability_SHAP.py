@@ -38,11 +38,11 @@ final_model = results[model_choice]["model"]
 
 with st.spinner("Computing SHAP values …"):
     shap_vals, expected_val = get_shap(
-    final_model,
-    id(final_model),           # hashable key
-    X_test.values,             # numpy array
-    list(X_test.columns),      # column names
-)
+        final_model,
+        id(final_model),
+        X_test.values,
+        list(X_test.columns),
+    )
 
 # ── Mean absolute SHAP bar ────────────────────────────────────────────────────
 st.subheader("Global Feature Importance (Mean |SHAP|)")

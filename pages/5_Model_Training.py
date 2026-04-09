@@ -46,7 +46,7 @@ for name, r in results.items():
         "RMSE ↓":  r["rmse"],
         "MAE ↓":   r["mae"],
         "R² ↑":    r["r2"],
-        "CV R² ↑": r["cv_r2"],
+        "CV R² ↑": r["cv_r2"] if r["cv_r2"] is not None else "—",
         "Best":    "🏆" if name == best_name else "",
     })
 results_df = pd.DataFrame(rows)
