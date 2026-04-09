@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 if "trained" not in st.session_state:
     st.info("First load: training models in background (~20 sec). "
-            "All pages will be instant after this.", icon="")
+            "All pages will be instant after this.", icon="🤖")
     st.session_state["trained"] = True
 
 st.set_page_config(

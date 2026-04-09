@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 
 from src.data_loader import load_raw_data
 from src.preprocessing import clean_data
-from src.features import engineer_features
+from src.features import engineer_features, FEATURE_COLS
 from src.clustering import run_clustering, add_cluster_cols
 from src.models import train_all_models
 
