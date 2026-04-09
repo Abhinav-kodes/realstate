@@ -18,7 +18,12 @@ df_clean, _ = clean_data(df_raw)
 df_feat = engineer_features(df_clean)
 cr      = run_clustering(df_feat)
 df, price_map = add_cluster_cols(df_feat, cr)
-results, X_train, X_test, y_train, y_test, best_name = train_all_models(df)
+_cols = FEATURE_COLS + ["price_per_area"]
+results, X_train, X_test, y_train, y_test, best_name = train_all_models(
+    len(df),                        # hashable key
+    df[_cols].values,               # numpy array
+    _cols,                          # column names
+)
 best_model = results[best_name]["model"]
 
 median_date = float(df["transaction_date"].median())

@@ -18,8 +18,12 @@ df_clean, _ = clean_data(df_raw)
 df_feat = engineer_features(df_clean)
 cr      = run_clustering(df_feat)
 df, _   = add_cluster_cols(df_feat, cr)
-results, X_train, X_test, y_train, y_test, best_name = train_all_models(df)
-
+_cols = FEATURE_COLS + ["price_per_area"]
+results, X_train, X_test, y_train, y_test, best_name = train_all_models(
+    len(df),                        # hashable key
+    df[_cols].values,               # numpy array
+    _cols,                          # column names
+)
 names  = list(results.keys())
 rmses  = [results[n]["rmse"]  for n in names]
 maes   = [results[n]["mae"]   for n in names]

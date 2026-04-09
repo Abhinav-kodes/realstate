@@ -22,8 +22,12 @@ df_clean, _ = clean_data(df_raw)
 df_feat = engineer_features(df_clean)
 cr      = run_clustering(df_feat)
 df, _   = add_cluster_cols(df_feat, cr)
-results, X_train, X_test, y_train, y_test, best_name = train_all_models(df)
-
+_cols = FEATURE_COLS + ["price_per_area"]
+results, X_train, X_test, y_train, y_test, best_name = train_all_models(
+    len(df),                        # hashable key
+    df[_cols].values,               # numpy array
+    _cols,                          # column names
+)
 # Let user pick model
 model_choice = st.selectbox(
     "Select model to explain:",
@@ -33,7 +37,12 @@ model_choice = st.selectbox(
 final_model = results[model_choice]["model"]
 
 with st.spinner("Computing SHAP values …"):
-    shap_vals, expected_val = get_shap(final_model, X_test, FEATURE_COLS)
+    shap_vals, expected_val = get_shap(
+    final_model,
+    id(final_model),           # hashable key
+    X_test.values,             # numpy array
+    list(X_test.columns),      # column names
+)
 
 # ── Mean absolute SHAP bar ────────────────────────────────────────────────────
 st.subheader("Global Feature Importance (Mean |SHAP|)")
